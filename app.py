@@ -3,60 +3,65 @@ import folium
 from streamlit_folium import st_folium
 from streamlit_geolocation import streamlit_geolocation
 
-# Professional Dark-Themed Configuration
-st.set_page_config(page_title="Eco-Sync | Intelligent Monitoring", layout="wide")
+# Clean Corporate Styling
+st.set_page_config(page_title="Eco-Sync | Professional Dashboard", layout="wide")
 st.markdown("""
     <style>
-    .stApp {background-color: #0f1117;}
-    h1 {color: #00ffcc; font-family: 'Segoe UI', sans-serif;}
-    h2, h3 {color: #ffffff;}
-    .stMetric {background-color: #1c252b; padding: 15px; border-radius: 10px;}
+    .main {background-color: #ffffff;}
+    h1 {color: #2c3e50; font-family: 'Helvetica', sans-serif;}
+    .stMetric {border: 1px solid #e1e4e8; padding: 20px; border-radius: 8px;}
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🌐 ECO-SYNC | Autonomous Monitoring System")
 st.markdown("---")
 
-# 1. Map Setup (Professional Dark Theme)
+# 1. Map Logic
 location = streamlit_geolocation()
 lat, lon = (location['latitude'], location['longitude']) if location and location['latitude'] else (18.4088, 76.5604)
 
-m = folium.Map(location=[lat, lon], zoom_start=17, tiles="CartoDB dark_matter")
-folium.Marker([lat+0.0001, lon], popup="Land Site", icon=folium.Icon(color="green", icon="leaf")).add_to(m)
-folium.Marker([lat-0.0001, lon], popup="Water Site", icon=folium.Icon(color="blue", icon="tint")).add_to(m)
+m = folium.Map(location=[lat, lon], zoom_start=17)
 
-# 2. Layout
-col1, col2 = st.columns([2, 1])
+# Multiple markers representing different sensors
+markers = [
+    {"pos": [lat+0.0005, lon+0.0005], "type": "land", "name": "Sector A (Land)"},
+    {"pos": [lat-0.0005, lon-0.0005], "type": "land", "name": "Sector B (Land)"},
+    {"pos": [lat+0.0005, lon-0.0005], "type": "water", "name": "Sector C (Water)"}
+]
 
-with col1:
-    st.subheader("📍 Geospatial Operational Layer")
-    map_data = st_folium(m, width=800, height=450)
+for mark in markers:
+    color = "green" if mark["type"] == "land" else "blue"
+    folium.Marker(mark["pos"], popup=mark["name"], icon=folium.Icon(color=color)).add_to(m)
 
-with col2:
-    st.subheader("🔍 Site Telemetry")
-    if map_data['last_object_clicked']:
-        clicked = map_data['last_object_clicked']['popup']
-        if "Land" in clicked:
-            st.metric("Air Quality Index", "42", "-2")
-            st.write("**Soil Humidity:** 65%")
-            st.write("**Ambient Temp:** 28°C")
-            st.info("STATUS: NORMAL | Monitoring Active")
-        elif "Water" in clicked:
-            st.metric("Plastic Density", "12 kg", "+0.5")
-            st.write("**Water Quality:** Moderate")
-            st.write("**Turbidity:** 4.2 NTU")
-            st.warning("STATUS: ACTION REQUIRED | Cleanup Initialized")
-    else:
-        st.write("Select a site marker on the map to initialize the live telemetry feed.")
+st.subheader("📍 Geospatial Operational Layer")
+map_data = st_folium(m, width=800, height=400)
 
-# 3. Timeline
-st.markdown("### ⏳ Historical Performance Index")
-st.slider("Operational Timeframe", 0, 100, 50, key="timeline")
+# 2. Telemetry Display
+if map_data['last_object_clicked']:
+    clicked = map_data['last_object_clicked']['popup']
+    st.subheader(f"Telemetry for {clicked}")
+    
+    if "Land" in clicked:
+        col1, col2, col3 = st.columns(3)
+        col1.metric("AQI", "42")
+        col2.metric("Humidity", "65%")
+        col3.metric("Temp", "28°C")
+        st.info("Status: Normal | Monitoring Active")
+    elif "Water" in clicked:
+        col1, col2 = st.columns(2)
+        col1.metric("Plastic Density", "12 kg")
+        col2.metric("Water Quality", "Moderate")
+        st.warning("Status: Cleanup Required")
+
+# 3. Timeline (7 Days)
+st.markdown("### ⏳ Performance Trend")
+days = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"]
+selected_day = st.select_slider("Select Timeline:", options=days)
+st.write(f"Displaying historical records for: **{selected_day}**")
 
 # 4. AI Analysis
 st.markdown("### 🤖 Cognitive AI Analysis")
-uploaded_file = st.file_uploader("Upload multispectral imagery for automated detection", type=["jpg", "png"])
+uploaded_file = st.file_uploader("Upload multispectral imagery", type=["jpg", "png"])
 if uploaded_file:
-    with st.spinner('Running neural analysis...'):
-        st.image(uploaded_file, width=400)
-        st.success("Analysis Complete: Environment classified successfully.")
+    st.image(uploaded_file, caption="Analysis In Progress...", width=300)
+    st.success("Environment Successfully Classified.")
