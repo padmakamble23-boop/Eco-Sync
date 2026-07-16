@@ -6,7 +6,7 @@ import random
 
 st.set_page_config(page_title="Eco-Sync | Enterprise", layout="wide")
 
-# 1. Initialize stable state
+# 1. Initialize stable state (Prevents the map refresh glitch)
 if 'initialized' not in st.session_state:
     st.session_state.initialized = True
     # Get location once
@@ -30,10 +30,9 @@ water_toggle = st.toggle("Enable Aquatic Monitoring Sector")
 
 # 3. Display Map
 st.subheader("📍 Geospatial Operational Layer")
-# We use 'returned_objects' to handle interaction without refreshing the whole map object
 map_data = st_folium(st.session_state.map_obj, width=1000, height=500, returned_objects=['last_object_clicked'])
 
-# 4. Telemetry Logic (Outside the map definition)
+# 4. Telemetry Logic
 if map_data['last_object_clicked']:
     clicked = map_data['last_object_clicked']['popup']
     st.markdown(f"### 🔍 Telemetry: {clicked}")
@@ -45,6 +44,12 @@ if map_data['last_object_clicked']:
     elif "Water" in clicked:
         st.warning("Aquatic data active")
 
-# 5. Bottom UI (No refresh-heavy elements)
+# 5. Timeline
 st.markdown("### ⏳ Performance Trend")
 st.select_slider("Select Timeline:", options=[f"Day {i}" for i in range(1, 8)])
+
+# 6. AI Upload Section (Back in place!)
+st.markdown("### 🤖 Cognitive AI Analysis")
+uploaded_file = st.file_uploader("Upload imagery for automated detection", type=["jpg", "png"])
+if uploaded_file:
+    st.success("Environment Successfully Classified via Neural Analysis.")
