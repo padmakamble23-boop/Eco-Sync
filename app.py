@@ -1,53 +1,50 @@
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
-from streamlit_geolocation import streamlit_geolocation
 import random
 
 st.set_page_config(page_title="Eco-Sync | Professional", layout="wide")
 
-# 1. Initialize Map Object (Run once)
+# 1. HARD-CODED LOCATION (Prevents GPS-induced flickering)
+LAT, LON = 18.4088, 76.5604 
+
+# 2. Build Map ONLY if it doesn't exist
 if 'map_obj' not in st.session_state:
-    loc = streamlit_geolocation()
-    lat, lon = (loc['latitude'], loc['longitude']) if loc and loc['latitude'] else (18.4088, 76.5604)
-    
-    m = folium.Map(location=[lat, lon], zoom_start=16)
+    m = folium.Map(location=[LAT, LON], zoom_start=16)
     for i in range(30):
         folium.Marker(
-            [lat + random.uniform(-0.005, 0.005), lon + random.uniform(-0.005, 0.005)], 
-            popup=f"Land Sector {i+1}", 
+            [LAT + random.uniform(-0.005, 0.005), LON + random.uniform(-0.005, 0.005)], 
+            popup=f"Sector_{i+1}", 
             icon=folium.Icon(color="green", icon="leaf")
         ).add_to(m)
     st.session_state.map_obj = m
 
 st.title("🌐 ECO-SYNC | Autonomous Monitoring System")
 
-# 2. Map Component
+# 3. Static Map Display
 st.subheader("📍 Geospatial Operational Layer")
-# We remove 'returned_objects' to stop the constant refreshing
-map_data = st_folium(st.session_state.map_obj, width=1000, height=500)
+map_data = st_folium(st.session_state.map_obj, width=800, height=400, returned_objects=['last_object_clicked'])
 
-# 3. Triggered Info Box (Only appears after click)
-if map_data['last_object_clicked']:
+# 4. Info Box (Appears only on click)
+if map_data and map_data.get('last_object_clicked'):
     clicked = map_data['last_object_clicked']['popup']
+    st.markdown("---")
+    st.subheader(f"🔍 Telemetry Report: {clicked}")
     
-    # This info box only renders when a click is detected
-    st.markdown(f"---")
-    st.markdown(f"### 🔍 Telemetry Data: {clicked}")
-    
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Status", "Operational")
-    col2.metric("Sensor ID", clicked.split()[-1])
-    col3.metric("Last Sync", "Just now")
-    
-    st.info("Environment data successfully retrieved from sensor network.")
+    # Simple display
+    col1, col2 = st.columns(2)
+    col1.metric("Air Quality Index", "42")
+    col2.metric("Sensor Status", "Active")
+    st.success("Data stream stable.")
+else:
+    st.info("Tap a marker on the map to view site data.")
 
-# 4. Static Elements (Do not trigger refresh)
+# 5. Fixed UI Elements
 st.markdown("---")
 st.markdown("### ⏳ Performance Trend")
-st.select_slider("Select Timeline:", options=[f"Day {i}" for i in range(1, 8)])
+st.select_slider("Timeframe", options=["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"])
 
 st.markdown("### 🤖 Cognitive AI Analysis")
-uploaded_file = st.file_uploader("Upload imagery for analysis", type=["jpg", "png"])
+uploaded_file = st.file_uploader("Upload site imagery", type=["jpg", "png"])
 if uploaded_file:
-    st.success("Analysis Complete.")
+    st.success("Neural analysis complete.")
