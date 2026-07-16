@@ -4,7 +4,7 @@ from streamlit_folium import st_folium
 import random
 
 st.set_page_config(page_title="Eco-Sync | Professional", layout="wide")
-
+i
 # 1. DATA GENERATOR (Simulates 7 days of historical data)
 def get_data(sector_name, day):
     # This simulates different data for each day
@@ -14,7 +14,7 @@ def get_data(sector_name, day):
             "Humidity": 60 + day,
             "Temp": 25 + day,
             "Status": "Normal" if day < 5 else "Alert",
-            "Recommendation": "Routine monitor" if day < 5 else "Increase filtration",
+            "Recommendation": "Routine monitor" if day < 5 else "Increase filtraton",
             "Alert": "None" if day < 5 else "High Particulates"
         }
     else:
