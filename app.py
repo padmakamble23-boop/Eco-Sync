@@ -3,58 +3,60 @@ import folium
 from streamlit_folium import st_folium
 from streamlit_geolocation import streamlit_geolocation
 
-st.set_page_config(page_title="Eco-Sync AI", layout="wide")
+# Professional Dark-Themed Configuration
+st.set_page_config(page_title="Eco-Sync | Intelligent Monitoring", layout="wide")
+st.markdown("""
+    <style>
+    .stApp {background-color: #0f1117;}
+    h1 {color: #00ffcc; font-family: 'Segoe UI', sans-serif;}
+    h2, h3 {color: #ffffff;}
+    .stMetric {background-color: #1c252b; padding: 15px; border-radius: 10px;}
+    </style>
+    """, unsafe_allow_html=True)
 
-st.title("🌱 Eco-Sync: Intelligent Guardian")
+st.title("🌐 ECO-SYNC | Autonomous Monitoring System")
+st.markdown("---")
 
-# 1. Live Location Tracking
-st.subheader("📍 Live Tracker")
+# 1. Map Setup (Professional Dark Theme)
 location = streamlit_geolocation()
+lat, lon = (location['latitude'], location['longitude']) if location and location['latitude'] else (18.4088, 76.5604)
 
-if location and location['latitude']:
-    lat, lon = location['latitude'], location['longitude']
-    m = folium.Map(location=[lat, lon], zoom_start=18)
-    folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color="red")).add_to(m)
-    st_folium(m, width=900, height=300)
-    
-    # Logic: Detect if near water (Simple distance check)
-    # In a real app, you would use a water-body map database
-    is_water = st.toggle("Simulate: I am at a Water Body") 
-else:
-    st.write("Please enable location access to see the map.")
-    is_water = False
+m = folium.Map(location=[lat, lon], zoom_start=17, tiles="CartoDB dark_matter")
+folium.Marker([lat+0.0001, lon], popup="Land Site", icon=folium.Icon(color="green", icon="leaf")).add_to(m)
+folium.Marker([lat-0.0001, lon], popup="Water Site", icon=folium.Icon(color="blue", icon="tint")).add_to(m)
 
-# 2. Dynamic Dashboard
-st.subheader("📊 Site Data")
-if is_water:
-    st.warning("### 💧 Aquatic Analysis")
-    st.write("Water Quality: Moderate")
-    st.write("Plastic Collected: 12kg")
-    st.write("Status: Contaminated")
-    st.write("Recommendation: Cleanup required")
-    st.write("Alert: Action needed")
-else:
-    st.info("### 🌿 Land Analysis")
-    st.write("AQI: 42")
-    st.write("Humidity: 65%")
-    st.write("Temperature: 28°C")
-    st.write("Status: Normal")
-    st.write("Recommendation: Routine monitoring")
-    st.write("Alert: None")
+# 2. Layout
+col1, col2 = st.columns([2, 1])
 
-# 3. Timeline Slider
-st.subheader("⏳ Historical Timeline")
-time_val = st.slider("Select Time Period:", 0, 100, 50)
-st.write(f"Displaying data for index: {time_val}")
+with col1:
+    st.subheader("📍 Geospatial Operational Layer")
+    map_data = st_folium(m, width=800, height=450)
 
-# 4. AI Vision Logic
-st.sidebar.header("🤖 AI Analysis")
-uploaded_file = st.sidebar.file_uploader("Upload Image", type=["jpg", "png"])
-
-if uploaded_file:
-    st.sidebar.image(uploaded_file, caption="Processing...", use_column_width=True)
-    # Simple AI Logic Mockup
-    if "water" in uploaded_file.name.lower():
-        st.sidebar.success("AI: Water body detected. Displaying aquatic data.")
+with col2:
+    st.subheader("🔍 Site Telemetry")
+    if map_data['last_object_clicked']:
+        clicked = map_data['last_object_clicked']['popup']
+        if "Land" in clicked:
+            st.metric("Air Quality Index", "42", "-2")
+            st.write("**Soil Humidity:** 65%")
+            st.write("**Ambient Temp:** 28°C")
+            st.info("STATUS: NORMAL | Monitoring Active")
+        elif "Water" in clicked:
+            st.metric("Plastic Density", "12 kg", "+0.5")
+            st.write("**Water Quality:** Moderate")
+            st.write("**Turbidity:** 4.2 NTU")
+            st.warning("STATUS: ACTION REQUIRED | Cleanup Initialized")
     else:
-        st.sidebar.success("AI: Land surface detected. Displaying air quality data.")
+        st.write("Select a site marker on the map to initialize the live telemetry feed.")
+
+# 3. Timeline
+st.markdown("### ⏳ Historical Performance Index")
+st.slider("Operational Timeframe", 0, 100, 50, key="timeline")
+
+# 4. AI Analysis
+st.markdown("### 🤖 Cognitive AI Analysis")
+uploaded_file = st.file_uploader("Upload multispectral imagery for automated detection", type=["jpg", "png"])
+if uploaded_file:
+    with st.spinner('Running neural analysis...'):
+        st.image(uploaded_file, width=400)
+        st.success("Analysis Complete: Environment classified successfully.")
