@@ -1,35 +1,60 @@
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
+from streamlit_geolocation import streamlit_geolocation
 
-st.set_page_config(page_title="Eco-Sync Dashboard", layout="wide")
+st.set_page_config(page_title="Eco-Sync AI", layout="wide")
 
-st.title("🌱 Eco-Sync: Autonomous Environmental Guardian")
-st.write("Eco-Sync is an autonomous, amphibious robotic system designed for real-time environmental monitoring and waste remediation. Utilizing integrated sensor arrays and AI-powered vision, it detects pollutants in both land and water ecosystems. Through smart data tracking and automated alerts, it delivers actionable insights for a sustainable, cleaner future.")
+st.title("🌱 Eco-Sync: Intelligent Guardian")
 
-# Map Section
-st.subheader("📍 Live Operational Map")
-m = folium.Map(location=[18.4088, 76.5604], zoom_start=16)
+# 1. Live Location Tracking
+st.subheader("📍 Live Tracker")
+location = streamlit_geolocation()
 
-folium.Marker([18.4088, 76.5604], popup="Land Site: Status Normal", icon=folium.Icon(color="green")).add_to(m)
-folium.Marker([18.4100, 76.5650], popup="Water Site: Cleanup Required", icon=folium.Icon(color="blue")).add_to(m)
+if location and location['latitude']:
+    lat, lon = location['latitude'], location['longitude']
+    m = folium.Map(location=[lat, lon], zoom_start=18)
+    folium.Marker([lat, lon], popup="Your Location", icon=folium.Icon(color="red")).add_to(m)
+    st_folium(m, width=900, height=300)
+    
+    # Logic: Detect if near water (Simple distance check)
+    # In a real app, you would use a water-body map database
+    is_water = st.toggle("Simulate: I am at a Water Body") 
+else:
+    st.write("Please enable location access to see the map.")
+    is_water = False
 
-st_folium(m, width=900, height=400)
+# 2. Dynamic Dashboard
+st.subheader("📊 Site Data")
+if is_water:
+    st.warning("### 💧 Aquatic Analysis")
+    st.write("Water Quality: Moderate")
+    st.write("Plastic Collected: 12kg")
+    st.write("Status: Contaminated")
+    st.write("Recommendation: Cleanup required")
+    st.write("Alert: Action needed")
+else:
+    st.info("### 🌿 Land Analysis")
+    st.write("AQI: 42")
+    st.write("Humidity: 65%")
+    st.write("Temperature: 28°C")
+    st.write("Status: Normal")
+    st.write("Recommendation: Routine monitoring")
+    st.write("Alert: None")
 
-# Dashboard
-col1, col2 = st.columns(2)
-with col1:
-    st.info("### 🌿 Land Site (Air/Soil)")
-    st.write("**AQI:** 42 | **Humidity:** 65% | **Temp:** 28°C")
-    st.write("**Recommendation:** Routine monitoring.")
-with col2:
-    st.warning("### 💧 Water Site (Aquatic)")
-    st.write("**Water Quality:** Moderate | **Plastic:** 12kg")
-    st.write("**Recommendation:** Cleanup required.")
+# 3. Timeline Slider
+st.subheader("⏳ Historical Timeline")
+time_val = st.slider("Select Time Period:", 0, 100, 50)
+st.write(f"Displaying data for index: {time_val}")
 
-# AI Sidebar
-st.sidebar.header("🤖 AI Vision System")
-uploaded_file = st.sidebar.file_uploader("Upload image for AI Scan", type=["jpg", "png"])
+# 4. AI Vision Logic
+st.sidebar.header("🤖 AI Analysis")
+uploaded_file = st.sidebar.file_uploader("Upload Image", type=["jpg", "png"])
+
 if uploaded_file:
-    st.sidebar.image(uploaded_file, caption="Analyzing...", use_column_width=True)
-    st.sidebar.success("Scan Result: Pollutants identified. Cleanup advised.")
+    st.sidebar.image(uploaded_file, caption="Processing...", use_column_width=True)
+    # Simple AI Logic Mockup
+    if "water" in uploaded_file.name.lower():
+        st.sidebar.success("AI: Water body detected. Displaying aquatic data.")
+    else:
+        st.sidebar.success("AI: Land surface detected. Displaying air quality data.")
