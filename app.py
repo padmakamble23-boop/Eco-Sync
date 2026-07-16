@@ -4,75 +4,77 @@ from streamlit_folium import st_folium
 import random
 
 st.set_page_config(page_title="Eco-Sync | Professional", layout="wide")
-i
-# 1. DATA GENERATOR (Simulates 7 days of historical data)
+
+# 1. FIXED DATA GENERATOR
 def get_data(sector_name, day):
-    # This simulates different data for each day
+    # Using a deterministic random seed based on name+day so data is consistent
+    random.seed(len(sector_name) + day)
     if "Land" in sector_name:
         return {
-            "AQI": 40 + (day * 2),
-            "Humidity": 60 + day,
-            "Temp": 25 + day,
-            "Status": "Normal" if day < 5 else "Alert",
-            "Recommendation": "Routine monitor" if day < 5 else "Increase filtraton",
-            "Alert": "None" if day < 5 else "High Particulates"
+            "AQI": random.randint(30, 100),
+            "Humidity": random.randint(40, 80),
+            "Temp": random.randint(20, 35),
+            "Status": "Normal",
+            "Recommendation": "Routine Monitoring",
+            "Alert": "None"
         }
     else:
         return {
-            "Water Quality": "Moderate" if day < 4 else "Poor",
-            "Recommendation": "Standard cleanup" if day < 4 else "Urgent biological treatment",
-            "Alert": "Low risk" if day < 4 else "Contamination Detected"
+            "Water Quality": "Moderate",
+            "Recommendation": "Standard Cleanup Required",
+            "Alert": "Minimal"
         }
 
-# 2. INITIALIZE STABLE STATE
+# 2. INITIALIZE MAP (Only once)
 if 'map_obj' not in st.session_state:
     m = folium.Map(location=[18.4088, 76.5604], zoom_start=16)
-    for i in range(15): # Land
+    for i in range(25):
         folium.Marker([18.4088 + random.uniform(-0.005, 0.005), 76.5604 + random.uniform(-0.005, 0.005)], 
-                      popup=f"Land Sector_{i+1}", icon=folium.Icon(color="green")).add_to(m)
-    for i in range(3): # Water
+                      popup=f"Land Sector {i+1}", icon=folium.Icon(color="green")).add_to(m)
+    for i in range(5):
         folium.Marker([18.4088 + random.uniform(-0.005, 0.005), 76.5604 + random.uniform(-0.005, 0.005)], 
-                      popup=f"Water Sector_{i+1}", icon=folium.Icon(color="blue")).add_to(m)
+                      popup=f"Water Sector {i+1}", icon=folium.Icon(color="blue")).add_to(m)
     st.session_state.map_obj = m
 
 st.title("🌐 ECO-SYNC | Autonomous Monitoring System")
 
-# 3. SIDE-BY-SIDE LAYOUT
+# 3. INTERACTIVE LOGIC
 col_map, col_data = st.columns([2, 1])
 
 with col_map:
-    st.subheader("📍 Geospatial Operational Layer")
-    map_data = st_folium(st.session_state.map_obj, width=700, height=450)
+    # Use key='map' so Streamlit tracks this component stably
+    map_data = st_folium(st.session_state.map_obj, width=700, height=500, key='map')
 
 with col_data:
-    st.subheader("⏳ Performance Timeline")
-    day_val = st.select_slider("Select Day", options=[1, 2, 3, 4, 5, 6, 7])
+    st.subheader("📊 Site Analysis")
     
-    st.markdown("---")
-    
-    # Logic: Only show info if a marker is clicked
-    if map_data and map_data.get('last_object_clicked'):
+    # Check if a marker was clicked
+    clicked = None
+    if map_data['last_object_clicked']:
         clicked = map_data['last_object_clicked']['popup']
-        data = get_data(clicked, day_val)
-        
-        st.markdown(f"### 🔍 Telemetry: {clicked}")
-        if "Land" in clicked:
-            st.metric("AQI", data["AQI"])
-            st.write(f"**Humidity:** {data['Humidity']}%")
-            st.write(f"**Temperature:** {data['Temp']}°C")
-            st.write(f"**Status:** {data['Status']}")
-            st.warning(f"**Recommendation:** {data['Recommendation']}")
-            st.error(f"**Alert:** {data['Alert']}")
-        else:
-            st.write(f"**Water Quality:** {data['Water Quality']}")
-            st.warning(f"**Recommendation:** {data['Recommendation']}")
-            st.error(f"**Alert:** {data['Alert']}")
-    else:
-        st.info("👈 Select a marker on the map to view site data.")
+        st.session_state.selected_marker = clicked
 
-# 4. AI UPLOAD (Fixed at bottom)
-st.markdown("---")
-st.subheader("🤖 Cognitive AI Analysis")
+    if 'selected_marker' in st.session_state:
+        st.write(f"**Selected:** {st.session_state.selected_marker}")
+        day = st.select_slider("Select Timeline", options=[1, 2, 3, 4, 5, 6, 7])
+        
+        data = get_data(st.session_state.selected_marker, day)
+        
+        # Display data based on type
+        if "Land" in st.session_state.selected_marker:
+            st.metric("AQI", data["AQI"])
+            st.write(f"Humidity: {data['Humidity']}% | Temp: {data['Temp']}°C")
+            st.write(f"Status: {data['Status']}")
+            st.info(f"AI Rec: {data['Recommendation']}")
+        else:
+            st.write(f"Water Quality: {data['Water Quality']}")
+            st.warning(f"AI Rec: {data['Recommendation']}")
+            st.error(f"Alert: {data['Alert']}")
+    else:
+        st.info("👈 Tap a map marker to view data.")
+
+# 4. AI UPLOAD (Fixed)
+st.divider()
 uploaded_file = st.file_uploader("Upload multispectral imagery", type=["jpg", "png"])
 if uploaded_file:
-    st.success("Neural analysis complete: Data validated.")
+    st.success("Environment analysis validated.")
